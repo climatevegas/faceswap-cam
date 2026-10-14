@@ -7,6 +7,10 @@ struct ContentView: View {
     @State private var isRunning = false
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
+    @State private var videoURL: URL?
+    @State private var mediaName: String = ""
+    @State private var isProcessingMedia = false
+    @StateObject private var voiceChanger = VoiceChangerManager.shared
     @State private var blendAmount: Double = 0.85
     @State private var faceSizeFactor: Double = 1.3
     @State private var faceDetected = false
@@ -18,9 +22,11 @@ struct ContentView: View {
                 Color(red: 0.1, green: 0.1, blue: 0.18)
                     .ignoresSafeArea()
 
-                VStack(spacing: 16) {
-                    // Camera Preview
-                    ZStack {
+                // Scrollable so every control fits on any iPhone size
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Camera Preview — scales to the device width
+                        ZStack {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color(red: 0.06, green: 0.2, blue: 0.38))
 
@@ -63,11 +69,13 @@ struct ContentView: View {
                             .padding(12)
                         }
                     }
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(3 / 4, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                    // Face Image Selector
+                    // Face Source Selector (photo or video)
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Face Image")
+                        Text("Face Source (Photo or Video)")
                             .font(.caption.bold())
                             .foregroundColor(.gray)
 
@@ -88,9 +96,17 @@ struct ContentView: View {
                                     )
                             }
 
-                            Text(selectedImage != nil ? "Image Selected" : "No image selected")
-                                .foregroundColor(selectedImage != nil ? .green : .gray)
-                                .font(.subheadline)
+                            if isProcessingMedia {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                Text("Processing…")
+                                    .foregroundColor(.green)
+                                    .font(.subheadline)
+                            } else {
+                                Text(mediaName.isEmpty ? "No photo or video selected" : mediaName)
+                                    .foregroundColor(mediaName.isEmpty ? .gray : .green)
+                                    .font(.subheadline)
+                            }
 
                             Spacer()
 
@@ -187,17 +203,49 @@ struct ContentView: View {
                     .cornerRadius(12)
                 }
                 .padding()
+                }
             }
             .navigationTitle("FaceSwap Cam")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
         .sheet(isPresented: $showImagePicker) {
-            ImagePicker(image: $selectedImage)
+            MediaPicker(image: $selectedImage, videoURL: $videoURL)
         }
         .onChange(of: selectedImage) { newImage in
             if let image = newImage {
                 faceSwapProcessor.setFaceImage(image)
+                mediaName = "Photo selected"
+            }
+        }
+        .onChange(of: videoURL) { newURL in
+            guard let url = newURL else { return }
+            processVideo(url)
+        }
+    }
+
+    /// A video supplies a face frame (its look) and its audio (its tone).
+    private func processVideo(_ url: URL) {
+        isProcessingMedia = true
+        mediaName = "Processing video..."
+
+        MediaProcessor.extractFaceFrame(from: url) { frame in
+            DispatchQueue.main.async {
+                if let frame = frame {
+                    self.faceSwapProcessor.setFaceImage(frame)
+                    self.mediaName = "Video frame captured"
+                } else {
+                    self.mediaName = "No face frame found"
+                }
+                self.isProcessingMedia = false
+            }
+        }
+
+        MediaProcessor.extractAudio(from: url) { audioURL in
+            DispatchQueue.main.async {
+                if let audioURL = audioURL {
+                    self.voiceChanger.preRecordedVoiceURL = audioURL
+                }
             }
         }
     }
