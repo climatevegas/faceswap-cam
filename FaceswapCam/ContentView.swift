@@ -69,8 +69,10 @@ struct ContentView: View {
                             .padding(12)
                         }
                     }
+                    // Camera Preview — compact 4:3 so START stays visible on any iPhone
                     .frame(maxWidth: .infinity)
-                    .aspectRatio(3 / 4, contentMode: .fit)
+                    .aspectRatio(4 / 3, contentMode: .fit)
+                    .frame(maxHeight: 340)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     // Face Source Selector (photo or video)
@@ -153,47 +155,12 @@ struct ContentView: View {
                     .background(Color(red: 0.09, green: 0.13, blue: 0.24))
                     .cornerRadius(12)
 
-                    // Control Buttons
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            startCamera()
-                        }) {
-                            HStack {
-                                Image(systemName: "play.fill")
-                                Text("START")
-                                    .fontWeight(.bold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(isRunning ? Color.gray : Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        .disabled(isRunning || selectedImage == nil)
-
-                        Button(action: {
-                            stopCamera()
-                        }) {
-                            HStack {
-                                Image(systemName: "stop.fill")
-                                Text("STOP")
-                                    .fontWeight(.bold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(!isRunning ? Color.gray : Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        .disabled(!isRunning)
-                    }
-
                     // Instructions
                     VStack(alignment: .leading, spacing: 4) {
                         Text("How to Use")
                             .font(.caption.bold())
                             .foregroundColor(.gray)
-                        Text("1. Upload a face image\n2. Click START\n3. Use in supported apps")
+                        Text("1. Upload a photo or video\n2. Click START\n3. Use in supported apps")
                             .font(.caption2)
                             .foregroundColor(.gray)
                     }
@@ -203,6 +170,39 @@ struct ContentView: View {
                     .cornerRadius(12)
                 }
                 .padding()
+                }
+                // START / STOP pinned to the bottom, always visible on any iPhone
+                .safeAreaInset(edge: .bottom) {
+                    HStack(spacing: 12) {
+                        Button(action: { startCamera() }) {
+                            HStack {
+                                Image(systemName: "play.fill")
+                                Text("START").fontWeight(.bold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isRunning ? Color.gray : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                        .disabled(isRunning || selectedImage == nil)
+
+                        Button(action: { stopCamera() }) {
+                            HStack {
+                                Image(systemName: "stop.fill")
+                                Text("STOP").fontWeight(.bold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(!isRunning ? Color.gray : Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                        .disabled(!isRunning)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 10)
+                    .background(Color(red: 0.09, green: 0.13, blue: 0.24))
                 }
             }
             .navigationTitle("FaceSwap Cam")
