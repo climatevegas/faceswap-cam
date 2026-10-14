@@ -46,6 +46,7 @@ class VoiceChangerManager: ObservableObject {
     private var playerNode = AVAudioPlayerNode()
     private var preRecordedFile: AVAudioFile?
     private var preRecordedBuffer: AVAudioPCMBuffer?
+    private var recorder: AVAudioRecorder?
 
     private let sampleRate: Double = 16000
     private let vadThreshold: Float = 1000  // RMS threshold (0..32767 scale)
@@ -82,11 +83,42 @@ class VoiceChangerManager: ObservableObject {
         }
     }
 
-    /// Record a new voice sample (iOS requires user permission for mic)
-    func recordVoiceSample(duration: TimeInterval = 5.0) {
-        // Implementation uses AVCaptureSession or AVAudioRecorder
-        // Left as extension point for full recording workflow
-        print("VoiceChanger: Record voice sample - implement with AVAudioRecorder")
+    /// Record a new voice sample from the microphone (5s by default).
+    func recordVoiceSample(duration: TimeInterval = 5.0, completion: @escaping (URL?) -> Void) {
+        let session = AVAudioSession.sharedInstance()
+        session.requestRecordPermission { granted in
+            guard granted else {
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
+
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("voice_sample_\(UUID().uuidString).wav")
+
+            let settings: [String: Any] = [
+                AVFormatIDKey: Int(kAudioFormatLinearPCM),
+                AVSampleRateKey: 16000.0,
+                AVNumberOfChannelsKey: 1,
+                AVLinearPCMBitDepthKey: 16,
+                AVLinearPCMIsFloatKey: false,
+                AVLinearPCMIsBigEndianKey: false
+            ]
+
+            do {
+                let recorder = try AVAudioRecorder(url: url, settings: settings)
+                self.recorder = recorder
+                recorder.record(forDuration: duration)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + duration + 0.25) {
+                    recorder.stop()
+                    self.recorder = nil
+                    completion(url)
+                }
+            } catch {
+                print("VoiceChanger: record failed: \(error)")
+                DispatchQueue.main.async { completion(nil) }
+            }
+        }
     }
 
     // MARK: - Start / Stop Listening

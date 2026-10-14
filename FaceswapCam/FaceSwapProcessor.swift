@@ -8,6 +8,7 @@ class FaceSwapProcessor: ObservableObject {
 
     var blendAmount: Float = 0.85
     var faceSizeFactor: Float = 1.3
+    var smoothingEnabled: Bool = true
 
     private var smoothFaceRect: CGRect?
     private let smoothingAlpha: Float = 0.3
@@ -75,6 +76,7 @@ class FaceSwapProcessor: ObservableObject {
     }
 
     private func smoothFaceRect(_ rect: CGRect) -> CGRect {
+        guard smoothingEnabled else { return rect }
         guard let current = smoothFaceRect else { return rect }
 
         let sx = CGFloat(smoothingAlpha * Float(rect.minX) + (1 - smoothingAlpha) * Float(current.minX))
