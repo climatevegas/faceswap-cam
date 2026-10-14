@@ -110,7 +110,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
 
             // Process face swap if face detected
             if let face = faces.first {
-                self?.processor?.processFrame(ciImage: ciImage, faceObservation: face, context: context)
+                processor?.processFrame(ciImage: ciImage, faceObservation: face, context: context)
             }
         } catch {
             print("Face detection error: \(error)")
