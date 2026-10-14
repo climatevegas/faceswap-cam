@@ -35,6 +35,7 @@ jobs:
     - name: Build for device (unsigned)
       run: |
         xcodebuild \
+          -workspace FaceswapCam.xcworkspace \
           -scheme FaceswapCam \
           -sdk iphoneos \
           -configuration Release \
