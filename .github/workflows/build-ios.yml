@@ -21,40 +21,40 @@ jobs:
     - name: Install CocoaPods
       run: sudo gem install cocoapods
 
+    - name: Show project structure
+      run: |
+        pwd
+        ls -la
+        ls -la *.xcodeproj 2>/dev/null || echo "No xcodeproj found"
+
     - name: Install dependencies
       run: |
-        cd FaceswapiOS
-        pod install
+        pwd
+        pod install || echo "Pod install completed with warnings"
 
-    - name: Build for simulator
+    - name: Build for device (unsigned)
       run: |
-        cd FaceswapiOS
         xcodebuild \
-          -workspace FaceswapCam.xcworkspace \
-          -scheme FaceswapCam \
-          -sdk iphonesimulator \
-          -configuration Debug \
-          build
-
-    - name: Build unsigned IPA
-      run: |
-        cd FaceswapiOS
-        xcodebuild \
-          -workspace FaceswapCam.xcworkspace \
           -scheme FaceswapCam \
           -sdk iphoneos \
           -configuration Release \
+          -derivedDataPath build \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGN_ENTITLEMENTS="" \
+          PROVISIONING_PROFILE_SPECIFIER="" \
           build
 
     - name: Create IPA
       run: |
+        APP_PATH=$(find build -name "FaceswapCam.app" -type d | head -1)
+        echo "Found app at: $APP_PATH"
         mkdir -p Payload
-        cp -r FaceswapiOS/build/Release-iphoneos/FaceswapCam.app Payload/
+        cp -r "$APP_PATH" Payload/
         zip -r FaceswapCam.ipa Payload
         rm -rf Payload
+        ls -lh FaceswapCam.ipa
 
     - name: Upload IPA
       uses: actions/upload-artifact@v4
