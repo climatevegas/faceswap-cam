@@ -1,6 +1,9 @@
 import SwiftUI
 import AVFoundation
 import Accelerate
+#if canImport(GoogleWebRTC)
+import GoogleWebRTC
+#endif
 import GoogleWebRTC
 
 /**
@@ -188,11 +191,13 @@ class VoiceChangerManager: ObservableObject {
     // MARK: - WebRTC Audio Integration
 
     /// Returns the audio track for WebRTC calls
+    #if canImport(GoogleWebRTC)
     func createWebRTCAudioTrack(_ factory: RTCPeerConnectionFactory) -> RTCAudioTrack? {
         let audioSource = factory.audioSource(with: RTCMediaConstraints())
         let audioTrack = factory.audioTrack(with: audioSource, trackId: "voice0")
         return audioTrack
     }
+    #endif
 
     // MARK: - Cleanup
 
