@@ -37,6 +37,14 @@
 		A300000000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				A300000000000000000004 /* FaceswapCam */,
+				A300000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A300000000000000000004 /* FaceswapCam */ = {
+			isa = PBXGroup;
+			children = (
 				A200000000000000000001 /* FaceswapCamApp.swift */,
 				A200000000000000000002 /* ContentView.swift */,
 				A200000000000000000003 /* CameraManager.swift */,
@@ -46,8 +54,9 @@
 				A200000000000000000008 /* Assets.xcassets */,
 				A20000000000000000000A /* Info.plist */,
 				A300000000000000000002 /* Managers */,
-				A300000000000000000003 /* Products */,
 			);
+			name = FaceswapCam;
+			path = FaceswapCam;
 			sourceTree = "<group>";
 		};
 		A300000000000000000002 /* Managers */ = {
